@@ -59,8 +59,8 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/<你的用户名>/pdf-compressor.git
-cd pdf-compressor
+git clone https://github.com/xiezhongjie0220-maker/pdf-.git
+cd pdf-
 
 # 2. 安装依赖
 npm install
