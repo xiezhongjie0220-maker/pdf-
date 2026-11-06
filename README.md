@@ -29,7 +29,24 @@
 
 ## 📦 下载安装
 
-前往 [Releases](../../releases) 下载最新版 `PDF 压缩助手 Setup x.x.x.exe`，双击安装即可。
+前往 [Releases](../../releases/latest) 下载最新版安装包。
+
+安装包约 96MB，为便于分发被切成 3 个分片。把以下文件下载到**同一文件夹**，然后双击 `merge-and-install.bat` 即可自动合并并启动安装：
+
+```
+PDF-Compressor-Setup-1.1.0.exe.part.aa   32 MB
+PDF-Compressor-Setup-1.1.0.exe.part.ab   32 MB
+PDF-Compressor-Setup-1.1.0.exe.part.ac   31.6 MB
+merge-and-install.bat                    741 B
+```
+
+也可手动合并（在该文件夹打开命令提示符）：
+
+```
+copy /b PDF-Compressor-Setup-1.1.0.exe.part.aa+PDF-Compressor-Setup-1.1.0.exe.part.ab+PDF-Compressor-Setup-1.1.0.exe.part.ac PDF-Compressor-Setup-1.1.0.exe
+```
+
+合并后的安装包 SHA256 为 `0285eb3802ff936c7ef3268192fe901ca066358ef3d002d731df748742f8fb6a`，可用 `certutil -hashfile` 校验。
 
 - 自动创建桌面与开始菜单快捷方式
 - 应用未做数字签名，首次运行如遇 SmartScreen 提示，点击「更多信息 → 仍要运行」
