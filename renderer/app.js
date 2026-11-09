@@ -188,7 +188,7 @@ async function startCompress() {
   isCompressing = false;
   const failed = items.filter((i) => i.status === 'error').length;
   if (failed) showToast(`完成，${failed} 个文件失败`);
-  else showToast('全部压缩完成 ✓');
+  else showToast('全部压缩完成 ✓ 已输出到各文件旁的「压缩后」文件夹');
   updateSummary();
 }
 

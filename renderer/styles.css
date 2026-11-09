@@ -83,6 +83,7 @@ main {
 }
 .drop-zone h1 { font-size: 21px; font-weight: 600; letter-spacing: .2px; margin-top: 14px; }
 .drop-zone p { margin-top: 8px; color: var(--text-2); font-size: 14px; }
+.drop-zone p.drop-tip { margin-top: 14px; font-size: 12.5px; color: var(--text-3, #86868b); }
 
 /* 列表非空时的紧凑态 */
 .drop-zone.compact {

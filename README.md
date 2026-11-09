@@ -24,6 +24,7 @@
 - 🤖 **自适应压缩**：每个文件自动搜索最合适的参数，实际压缩率精准贴近目标（详见[工作原理](#-工作原理)）
 - 🛡️ **画质保护**：压缩空间不足的文件（如纯文字 PDF）自动识别为「已是最佳体积」，绝不强行破坏画质
 - 📊 **体积对比**：单文件压缩前后对比 + 总体积节省统计，一目了然
+- 📂 **整理输出**：在原文件所在目录自动建立「压缩后」文件夹，输出**与原文件同名**的压缩结果，原始文件不动；目标已存在时自动追加序号，绝不覆盖已有文件
 - 🔒 **完全本地**：基于本地 Ghostscript 引擎，无网络请求，文件不出电脑
 - 🍎 **苹果风格界面**：无边框窗口、毛玻璃质感、细腻动效
 
@@ -34,16 +35,16 @@
 安装包约 96MB，为便于分发被切成 3 个分片。把以下文件下载到**同一文件夹**，然后双击 `merge-and-install.bat` 即可自动合并并启动安装：
 
 ```
-PDF-Compressor-Setup-1.1.0.exe.part.aa   32 MB
-PDF-Compressor-Setup-1.1.0.exe.part.ab   32 MB
-PDF-Compressor-Setup-1.1.0.exe.part.ac   31.6 MB
+PDF-Compressor-Setup-1.2.0.exe.part.aa   32 MB
+PDF-Compressor-Setup-1.2.0.exe.part.ab   32 MB
+PDF-Compressor-Setup-1.2.0.exe.part.ac   31.6 MB
 merge-and-install.bat                    741 B
 ```
 
 也可手动合并（在该文件夹打开命令提示符）：
 
 ```
-copy /b PDF-Compressor-Setup-1.1.0.exe.part.aa+PDF-Compressor-Setup-1.1.0.exe.part.ab+PDF-Compressor-Setup-1.1.0.exe.part.ac PDF-Compressor-Setup-1.1.0.exe
+copy /b PDF-Compressor-Setup-1.2.0.exe.part.aa+PDF-Compressor-Setup-1.2.0.exe.part.ab+PDF-Compressor-Setup-1.2.0.exe.part.ac PDF-Compressor-Setup-1.2.0.exe
 ```
 
 合并后的安装包 SHA256 为 `0285eb3802ff936c7ef3268192fe901ca066358ef3d002d731df748742f8fb6a`，可用 `certutil -hashfile` 校验。
@@ -59,7 +60,7 @@ copy /b PDF-Compressor-Setup-1.1.0.exe.part.aa+PDF-Compressor-Setup-1.1.0.exe.pa
 1. 把 PDF 文件拖进窗口（或点击选择文件）
 2. 选择压缩级别：**压缩 20%**（画质优先）/ **压缩 50%**（均衡推荐）/ **压缩 70%**（体积优先）
 3. 点击「开始压缩」
-4. 压缩完成后在原文件旁生成 `xxx_压缩.pdf`，点击「打开文件」可直接定位
+4. 压缩完成后，在**原文件所在目录**自动创建「压缩后」文件夹，并以**与原文件相同的名字**输出（不改动原文件）；点击「打开文件」可直接定位
 
 ## ⚙️ 工作原理
 
