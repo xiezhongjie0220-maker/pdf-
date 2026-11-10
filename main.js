@@ -91,7 +91,7 @@ function buildOutputPath(filePath, customDir) {
 }
 
 ipcMain.handle('compress-file', async (event, { filePath, level, outputDir }) => {
-  const cfg = LEVELS[level] || LEVELS.p50;
+  const cfg = LEVELS[level] || LEVELS.q_mid;
   let outputPath;
   try {
     outputPath = buildOutputPath(filePath, outputDir || null);

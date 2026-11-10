@@ -20,7 +20,7 @@ const customPathEl = document.getElementById('customPath');
 const chooseFolderBtn = document.getElementById('chooseFolderBtn');
 const dropTip = document.getElementById('dropTip');
 
-let currentLevel = 'p50';
+let currentLevel = 'q_mid';
 let outputMode = localStorage.getItem('outMode') === 'custom' ? 'custom' : 'default';
 let customOutputDir = localStorage.getItem('outDir') || null;
 let items = []; // { id, path, name, dir, size, status, result }

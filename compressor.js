@@ -1,57 +1,98 @@
 /**
- * PDF 压缩引擎：封装 Ghostscript + 目标压缩率搜索
+ * PDF 压缩引擎：封装 Ghostscript + 按品质档位的自适应压缩
  * 纯 Node 模块，可脱离 Electron 单独测试
  *
- * v1.3.0 起执行「文字清晰度优先」策略：
- * - 分辨率下限 200dpi：任何档位都不会把文字压到 200dpi 以下
- * - QFactor 上限 0.4：JPEG 重编码始终保持在视觉高质量区间
- * - 黑白位图（扫描文字）固定按 400dpi 处理，仅在高分辨率时轻降
- * - 首档为「结构无损」：完全不碰图像，只做字体子集化、重复对象
- *   去重、内容流压缩等纯无损优化
- * - 达不到目标压缩率时按「能压多少压多少」返回，绝不硬压
+ * v1.5.0 起改为「按品质压缩」方案（对齐 WPS 的三档品质模型）：
+ * - 高品质：250dpi / 高质量 JPEG，压缩约 55%，适合打印与存档
+ * - 中品质：175dpi / 中等质量 JPEG，压缩约 85%，屏幕阅读清晰（WPS 推荐档同水平）
+ * - 低品质：120dpi / 较低质量 JPEG，压缩约 94%，体积最小、仍可读
+ * 每档在「该档品质带内」按目标压缩率做阶梯搜索，达到目标即停，
+ * 不会为了数字继续牺牲画质；达不到时按该档最激进参数输出。
  *
  * 关键机制（实测结论）：
  * - Ghostscript 默认 PassThroughJPEGImages=true，原 JPEG 会原样拷贝，
  *   所有质量参数都失效；重编码时必须关闭直通。
- * - 同分辨率重编码通常比原文件更大，所以体积主要靠降采样，但要
- *   服从清晰度约束。
+ * - 同分辨率重编码通常比原文件更大，所以体积主要靠降采样。
+ * - 分辨率是体积的第一杠杆：300dpi→150dpi 面积降到 1/4。
+ * - 黑白位图（扫描文字）按 400dpi 保留，文字始终锐利。
  */
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 
 /**
- * 三档压缩级别：按目标压缩率定义
+ * 三档品质：与 WPS「按品质压缩」对应
+ * target = 预期压缩率（实测典型值）
  */
 const LEVELS = {
-  p20: { target: 0.20, label: '压缩 20%', hint: '画质优先' },
-  p50: { target: 0.50, label: '压缩 50%', hint: '文字保清晰' },
-  p70: { target: 0.70, label: '压缩 70%', hint: '文字保清晰' },
+  q_high: {
+    target: 0.55,
+    label: '高品质',
+    tier: 'high',
+    hint: '打印/存档 · 视觉几乎无差',
+  },
+  q_mid: {
+    target: 0.85,
+    label: '中品质',
+    tier: 'mid',
+    hint: '屏幕阅读清晰 · 推荐',
+  },
+  q_low: {
+    target: 0.93,
+    label: '低品质',
+    tier: 'low',
+    hint: '体积最小 · 可读',
+  },
 };
 
-/** 分辨率下限：低于该值文字开始明显发虚，任何档位不得低于此 */
-const MIN_RES = 200;
-/** QFactor 上限（越大质量越低），超过该值文字会出现可见 JPEG 痕迹 */
-const MAX_QF = 0.4;
 /** 黑白位图统一处理分辨率：位图文字 400dpi 依然锐利 */
 const MONO_RES = 400;
 
 /**
- * 压缩阶梯：由「最温和」到「最激进」排列，体积单调递减。
- * lossless = 纯结构优化，不碰任何图像（零画质损失）
- * res  = 彩色/灰度图像重采样 dpi（不低于 MIN_RES）
- * qf   = Distiller QFactor（不超过 MAX_QF）
+ * 每档的品质带阶梯：由「更保画质」到「该档最激进」排列，体积单调递减。
+ * 搜索时从阶梯中选出「刚好达到目标压缩率」的最温和一档。
+ * lossless = 纯结构优化（零画质损失），仅高品质档保留
  */
-const LADDER = [
-  { lossless: true },
-  { res: 300, qf: 0.15 },
-  { res: 280, qf: 0.20 },
-  { res: 260, qf: 0.25 },
-  { res: 240, qf: 0.25 },
-  { res: 225, qf: 0.30 },
-  { res: 210, qf: 0.35 },
-  { res: MIN_RES, qf: MAX_QF },
-];
+const LADDERS = {
+  high: [
+    { lossless: true },
+    { res: 300, qf: 0.12 },
+    { res: 290, qf: 0.15 },
+    { res: 280, qf: 0.18 },
+    { res: 270, qf: 0.21 },
+    { res: 260, qf: 0.24 },
+    { res: 250, qf: 0.27 },
+    { res: 240, qf: 0.30 },
+    { res: 230, qf: 0.33 },
+    { res: 220, qf: 0.36 },
+  ],
+  mid: [
+    { res: 200, qf: 0.34 },
+    { res: 195, qf: 0.37 },
+    { res: 190, qf: 0.40 },
+    { res: 185, qf: 0.43 },
+    { res: 180, qf: 0.45 },
+    { res: 175, qf: 0.47 },
+    { res: 170, qf: 0.49 },
+    { res: 160, qf: 0.52 },
+    { res: 150, qf: 0.56 },
+  ],
+  low: [
+    { res: 145, qf: 0.60 },
+    { res: 140, qf: 0.62 },
+    { res: 135, qf: 0.65 },
+    { res: 130, qf: 0.68 },
+    { res: 125, qf: 0.70 },
+    { res: 120, qf: 0.72 },
+    { res: 115, qf: 0.75 },
+    { res: 110, qf: 0.78 },
+    { res: 105, qf: 0.81 },
+    { res: 100, qf: 0.84 },
+  ],
+};
+
+/** 兼容旧导出：默认阶梯 */
+const LADDER = LADDERS.mid;
 
 /** 用指定参数压一次 */
 function runGhostscript(gsPath, inputPath, outputPath, step) {
@@ -69,7 +110,7 @@ function runGhostscript(gsPath, inputPath, outputPath, step) {
 
   let extra = [];
   if (!step.lossless) {
-    // 图像重编码 + 降采样（清晰度约束内的温和参数）
+    // 图像重编码 + 降采样
     extra = [
       // 关闭 JPEG 直通，否则质量参数不生效
       '-dPassThroughJPEGImages=false',
@@ -82,7 +123,7 @@ function runGhostscript(gsPath, inputPath, outputPath, step) {
       '-dGrayImageDownsampleType=/Bicubic',
       '-dGrayImageDownsampleThreshold=1.0',
       `-dGrayImageResolution=${step.res}`,
-      // 黑白位图（扫描文字）：只在高于 400dpi 时轻降，保证文字锐度
+      // 黑白位图（扫描文字）：保留 400dpi，文字始终锐利
       '-dDownsampleMonoImages=true',
       '-dMonoImageDownsampleType=/Subsample',
       `-dMonoImageResolution=${MONO_RES}`,
@@ -90,6 +131,8 @@ function runGhostscript(gsPath, inputPath, outputPath, step) {
       '-dColorImageFilter=/DCTEncode',
       '-dAutoFilterGrayImages=false',
       '-dGrayImageFilter=/DCTEncode',
+      // 图像里保留的文本可选内容（OCR 层）不丢
+      '-dPreserveMarkedContent=true',
     ];
     // 灰度文档（如黑白扫描件）：RGB→灰度存储，视觉零差异、体积大幅缩小
     if (step.gray) {
@@ -175,12 +218,14 @@ function detectGrayscale(gsPath, inputPath, tmpDir) {
 }
 
 /**
- * 压缩到目标压缩率（在清晰度约束内搜索）。
- * 返回 { ok, skipped, originalSize, newSize, achieved, metTarget, res, lossless, gray }
+ * 按品质档位压缩。
+ * cfg = LEVELS[key]，包含 target / tier
+ * 返回 { ok, skipped, originalSize, newSize, achieved, metTarget, res, qf, lossless, gray, probes }
  */
 async function compressToTarget(gsPath, inputPath, outputPath, cfg, tmpDir) {
   const originalSize = fs.statSync(inputPath).size;
   const target = cfg.target;
+  const ladder = LADDERS[cfg.tier] || LADDERS.mid;
   const cache = new Map(); // key -> { path, size, reduction, res, qf, lossless, gray }
   let probes = 0;
 
@@ -200,18 +245,15 @@ async function compressToTarget(gsPath, inputPath, outputPath, cfg, tmpDir) {
     return rec;
   };
 
-  const probeIndex = async (idx) => probeStep(LADDER[idx]);
-
   // 二分：找到「第一个达到目标压缩率」的阶梯位置（体积随 index 单调递减）
   let lo = 0;
-  let hi = LADDER.length - 1;
+  let hi = ladder.length - 1;
 
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
-    const rec = await probeIndex(mid);
+    const rec = await probeStep(ladder[mid]);
     if (!rec) {
-      // 单次失败时向更激进的相邻项回退一次
-      const alt = await probeIndex(Math.min(LADDER.length - 1, mid + 1));
+      const alt = await probeStep(ladder[Math.min(ladder.length - 1, mid + 1)]);
       if (!alt) break;
       lo = mid + 2;
       continue;
@@ -245,18 +287,23 @@ async function compressToTarget(gsPath, inputPath, outputPath, cfg, tmpDir) {
   if (best && !best.lossless && best.res) {
     const isGrayDoc = await detectGrayscale(gsPath, inputPath, tmpDir);
     if (isGrayDoc) {
-      const idx = LADDER.findIndex(
-        (s) => !s.lossless && s.res === best.res && s.qf === best.qf
-      );
-      const candidates = [probeStep({ ...LADDER[idx], gray: true })];
-      if (idx + 1 < LADDER.length) {
-        candidates.push(probeStep({ ...LADDER[idx + 1], gray: true }));
-      }
+      const idx = ladder.findIndex((s) => !s.lossless && s.res === best.res && s.qf === best.qf);
+      const candidates = [];
+      if (idx >= 0) candidates.push(probeStep({ ...ladder[idx], gray: true }));
+      if (idx >= 0 && idx + 1 < ladder.length) candidates.push(probeStep({ ...ladder[idx + 1], gray: true }));
       const grayResults = (await Promise.all(candidates)).filter(Boolean);
-      const grayBest = grayResults.length
-        ? grayResults.reduce((a, b) => (b.size < a.size ? b : a))
-        : null;
-      if (grayBest && grayBest.size < best.size) best = grayBest;
+      // 在「原方案 + 灰度方案」中选压缩率最接近目标的一档：
+      // 灰度虽然视觉无差异，但过度压缩会白降分辨率，不如停在更温和的档位
+      const pool = [best, ...grayResults];
+      const better = pool.reduce((a, b) => {
+        if (!a) return b;
+        const da = Math.abs(a.reduction - target);
+        const db = Math.abs(b.reduction - target);
+        if (db < da - 0.005) return b;
+        if (Math.abs(db - da) <= 0.005 && b.size < a.size) return b;
+        return a;
+      }, null);
+      if (better) best = better;
     }
   }
 
@@ -277,12 +324,15 @@ async function compressToTarget(gsPath, inputPath, outputPath, cfg, tmpDir) {
     originalSize,
     newSize: best.size,
     achieved: best.reduction,
-    metTarget: best.reduction >= target - 0.02,
+    metTarget: best.reduction >= target - 0.03,
     res: best.res,
     qf: best.qf,
     lossless: best.lossless,
+    gray: best.gray,
     probes,
   };
 }
 
-module.exports = { LEVELS, LADDER, MIN_RES, MAX_QF, MONO_RES, runGhostscript, compressToTarget };
+module.exports = {
+  LEVELS, LADDERS, LADDER, MONO_RES, runGhostscript, compressToTarget,
+};
