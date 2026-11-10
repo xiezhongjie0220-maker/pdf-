@@ -34,7 +34,9 @@
 
 ## 📦 下载安装
 
-前往 [Releases](../../releases/latest) 下载最新版安装包。
+前往 [Releases](../../releases/latest) 下载安装包。
+
+> 当前 Release 提供的是 **v1.5.0** 安装包；**v1.6.0**（压缩前预估体积）的代码与 `v1.6.0` tag 已同步到本仓库，安装包将在现有分片上传完成后发布。
 
 安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [Releases](../../releases/latest) 页面把 **全部分片** 与 `merge-and-install-1.5.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
 
