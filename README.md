@@ -50,7 +50,7 @@ merge-and-install.bat                    741 B
 copy /b PDF-Compressor-Setup-1.3.0.exe.part.aa+PDF-Compressor-Setup-1.3.0.exe.part.ab+PDF-Compressor-Setup-1.3.0.exe.part.ac PDF-Compressor-Setup-1.3.0.exe
 ```
 
-合并后的安装包 SHA256 为 `0285eb3802ff936c7ef3268192fe901ca066358ef3d002d731df748742f8fb6a`，可用 `certutil -hashfile` 校验。
+合并后的安装包 SHA256 为 `9bff5ffdad472f6920e642b8619bc541080c98b1a2d981ff7efcb226488db4ce`，可用 `certutil -hashfile` 校验。
 
 - 自动创建桌面与开始菜单快捷方式
 - 应用未做数字签名，首次运行如遇 SmartScreen 提示，点击「更多信息 → 仍要运行」
