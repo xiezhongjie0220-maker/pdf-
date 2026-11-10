@@ -35,20 +35,20 @@
 
 前往 [Releases](../../releases/latest) 下载最新版安装包。
 
-安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [Releases](../../releases/latest) 页面把 **全部分片** 与 `merge-and-install-1.4.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
+安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [Releases](../../releases/latest) 页面把 **全部分片** 与 `merge-and-install-1.5.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
 
 ```
-PDF-Compressor-Setup-1.4.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
-merge-and-install-1.4.0.bat                        741 B
+PDF-Compressor-Setup-1.5.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
+merge-and-install-1.5.0.bat                        741 B
 ```
 
 也可手动合并（在该文件夹打开终端执行）：
 
 ```powershell
-Get-Content -Encoding Byte PDF-Compressor-Setup-1.4.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.4.0.exe
+Get-Content -Encoding Byte PDF-Compressor-Setup-1.5.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.5.0.exe
 ```
 
-合并后的安装包 SHA256 为 `fa2f8c7d78a264c94f3ffd47250bf15eb63ed3b76c9bba870998bdf2425bcb53`，可用 `certutil -hashfile` 校验。
+合并后的安装包 SHA256 为 `c520c608c3b29600af5b70ce14ab0f18fc6516b5a5a53a22d4598b4d37b6757e`，可用 `certutil -hashfile` 校验。
 
 - 自动创建桌面与开始菜单快捷方式
 - 应用未做数字签名，首次运行如遇 SmartScreen 提示，点击「更多信息 → 仍要运行」
