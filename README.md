@@ -36,22 +36,22 @@
 
 前往 [Releases](../../releases/latest) 下载安装包。
 
-> 当前 Release 提供的是 **v1.5.0** 安装包；**v1.6.0**（压缩前预估体积）的代码与 `v1.6.0` tag 已同步到本仓库，安装包将在现有分片上传完成后发布。
+> 最新版本为 **v1.6.0**（压缩前预估体积）。v1.1.0 ~ v1.6.0 各版本的安装包分片与合并脚本均已发布在 [Releases](../../releases) 页面，可按需选择历史版本。
 
-安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [Releases](../../releases/latest) 页面把 **全部分片** 与 `merge-and-install-1.5.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
+安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [v1.6.0 Release](../../releases/tag/v1.6.0) 页面把 **全部分片** 与 `merge-and-install-1.6.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
 
 ```
-PDF-Compressor-Setup-1.5.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
-merge-and-install-1.5.0.bat                        741 B
+PDF-Compressor-Setup-1.6.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
+merge-and-install-1.6.0.bat                        2.6 KB
 ```
 
 也可手动合并（在该文件夹打开终端执行）：
 
 ```powershell
-Get-Content -Encoding Byte PDF-Compressor-Setup-1.5.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.5.0.exe
+Get-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe
 ```
 
-合并后的安装包 SHA256 为 `c520c608c3b29600af5b70ce14ab0f18fc6516b5a5a53a22d4598b4d37b6757e`，可用 `certutil -hashfile` 校验。
+合并后的安装包 SHA256 为 `32542a87d1a429f74ead1783e13a952ee66d59a4c14a445e83e3bda36882aecb`，可用 `certutil -hashfile` 校验。
 
 - 自动创建桌面与开始菜单快捷方式
 - 应用未做数字签名，首次运行如遇 SmartScreen 提示，点击「更多信息 → 仍要运行」
