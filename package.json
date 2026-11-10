@@ -1,6 +1,6 @@
 {
   "name": "pdf-compressor",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "PDF 批量压缩助手 - 极简苹果风格 Windows 桌面应用",
   "main": "main.js",
   "author": "WorkBuddy User",

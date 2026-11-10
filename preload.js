@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('pdfAPI', {
   selectFiles: () => ipcRenderer.invoke('select-files'),
   selectOutputFolder: () => ipcRenderer.invoke('select-output-folder'),
   compressFile: (payload) => ipcRenderer.invoke('compress-file', payload),
+  estimateFile: (payload) => ipcRenderer.invoke('estimate-file', payload),
   showInFolder: (filePath) => ipcRenderer.invoke('show-in-folder', filePath),
   winMinimize: () => ipcRenderer.send('win-minimize'),
   winMaximize: () => ipcRenderer.send('win-maximize'),

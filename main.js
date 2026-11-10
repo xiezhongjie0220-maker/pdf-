@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { LEVELS, compressToTarget } = require('./compressor');
+const { LEVELS, compressToTarget, estimateCompression } = require('./compressor');
 
 /** 解析捆绑的 Ghostscript 可执行文件路径 */
 function resolveGsPath() {
@@ -120,6 +120,22 @@ ipcMain.handle('compress-file', async (event, { filePath, level, outputDir }) =>
     };
   } catch (err) {
     return { ok: false, error: String(err && err.message ? err.message : err), outputPath };
+  } finally {
+    if (tmpDir) {
+      try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* 忽略 */ }
+    }
+  }
+});
+
+// 压缩前体积预估：只做一次轻量试压缩，不写用户目录
+ipcMain.handle('estimate-file', async (_event, { filePath, level }) => {
+  const cfg = LEVELS[level] || LEVELS.q_mid;
+  let tmpDir;
+  try {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfc-est-'));
+    return await estimateCompression(GS_PATH, filePath, cfg, tmpDir);
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) };
   } finally {
     if (tmpDir) {
       try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* 忽略 */ }

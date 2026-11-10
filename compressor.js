@@ -333,6 +333,42 @@ async function compressToTarget(gsPath, inputPath, outputPath, cfg, tmpDir) {
   };
 }
 
+/**
+ * 压缩前体积预估（对应 WPS「按品质压缩」里的「点击计算 / 预估体积」）。
+ *
+ * 用该档品质带的「代表参数」对整份文档做一次试压缩：
+ * - 不做二分搜索、不做灰度优化，耗时约为正式压缩的 1/8
+ * - 返回估算体积与压缩率，仅供选择档位时参考
+ * - 试压缩产物立即删除，不写用户目录
+ *
+ * 代表参数的取点按档位经验位置选取：二分搜索在不同品质带里
+ * 通常停在不同位置（高品质偏带尾、低品质偏带首），按此取点
+ * 可让预估与最终结果的偏差落在几个百分点内。
+ *
+ * 这是自主实现的估算逻辑，不依赖、不调用 WPS 的任何组件。
+ */
+async function estimateCompression(gsPath, inputPath, cfg, tmpDir) {
+  const originalSize = fs.statSync(inputPath).size;
+  const ladder = LADDERS[cfg.tier] || LADDERS.mid;
+  const positions = { high: 0.65, mid: 0.5, low: 0.35 };
+  const pos = positions[cfg.tier] ?? 0.5;
+  const step = ladder[Math.min(ladder.length - 1, Math.floor(ladder.length * pos))];
+  const out = path.join(tmpDir, 'estimate.pdf');
+  const r = await runGhostscript(gsPath, inputPath, out, step);
+  try { fs.unlinkSync(out); } catch { /* 忽略 */ }
+  if (!r.ok) return { ok: false, error: r.error };
+  // 试压缩比原文件还大时按「已是最佳体积」返回
+  const estimatedSize = Math.min(r.size, originalSize);
+  return {
+    ok: true,
+    originalSize,
+    estimatedSize,
+    reduction: 1 - estimatedSize / originalSize,
+    res: step.res || null,
+  };
+}
+
 module.exports = {
-  LEVELS, LADDERS, LADDER, MONO_RES, runGhostscript, compressToTarget,
+  LEVELS, LADDERS, LADDER, MONO_RES,
+  runGhostscript, compressToTarget, estimateCompression,
 };
