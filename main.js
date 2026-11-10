@@ -51,20 +51,31 @@ ipcMain.handle('select-files', async () => {
   });
 });
 
-// 压缩单个文件：arg = { filePath, level }
-// 输出目录名：在源文件所在目录下自动创建
+// 选择输出文件夹
+ipcMain.handle('select-output-folder', async () => {
+  const result = await dialog.showOpenDialog({
+    title: '选择压缩结果输出文件夹',
+    buttonLabel: '使用此文件夹',
+    properties: ['openDirectory', 'createDirectory'],
+  });
+  if (result.canceled || !result.filePaths.length) return null;
+  return result.filePaths[0];
+});
+
+// 压缩单个文件：arg = { filePath, level, outputDir? }
+// outputDir 为空时，输出到源文件所在目录下的「压缩后」文件夹
 const OUTPUT_DIR_NAME = '压缩后';
 
 /**
- * 计算输出路径：与原文件同名，输出到源目录下的「压缩后」文件夹。
+ * 计算输出路径：与原文件同名。
+ * - 指定 customDir 时输出到该文件夹；否则输出到源目录下的「压缩后」文件夹
  * - 目标已存在时自动追加序号（避免覆盖之前的压缩结果）
  * - 源文件本身就在输出文件夹里时，改名输出以保护源文件
  */
-function buildOutputPath(filePath) {
-  const dir = path.dirname(filePath);
+function buildOutputPath(filePath, customDir) {
   const ext = path.extname(filePath);
   const base = path.basename(filePath, ext);
-  const outDir = path.join(dir, OUTPUT_DIR_NAME);
+  const outDir = customDir ? customDir : path.join(path.dirname(filePath), OUTPUT_DIR_NAME);
   fs.mkdirSync(outDir, { recursive: true });
 
   let candidate = path.join(outDir, `${base}${ext}`);
@@ -79,11 +90,11 @@ function buildOutputPath(filePath) {
   return candidate;
 }
 
-ipcMain.handle('compress-file', async (event, { filePath, level }) => {
+ipcMain.handle('compress-file', async (event, { filePath, level, outputDir }) => {
   const cfg = LEVELS[level] || LEVELS.p50;
   let outputPath;
   try {
-    outputPath = buildOutputPath(filePath);
+    outputPath = buildOutputPath(filePath, outputDir || null);
   } catch (err) {
     return { ok: false, error: `无法创建输出文件夹: ${err.message}`, outputPath: null };
   }

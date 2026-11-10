@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('pdfAPI', {
     }
   },
   selectFiles: () => ipcRenderer.invoke('select-files'),
+  selectOutputFolder: () => ipcRenderer.invoke('select-output-folder'),
   compressFile: (payload) => ipcRenderer.invoke('compress-file', payload),
   showInFolder: (filePath) => ipcRenderer.invoke('show-in-folder', filePath),
   winMinimize: () => ipcRenderer.send('win-minimize'),

@@ -35,7 +35,32 @@
       </div>
       <h1>拖拽 PDF 文件到这里</h1>
       <p>或者 <button id="browseBtn" class="inline-btn">点击选择文件</button>，支持批量处理</p>
-      <p class="drop-tip">压缩完成后，同名文件将输出到原文件所在目录的「压缩后」文件夹</p>
+      <p class="drop-tip" id="dropTip">压缩完成后，同名文件将输出到原文件所在目录的「压缩后」文件夹</p>
+    </section>
+
+    <!-- 输出位置 -->
+    <section id="outputPanel" class="output-panel hidden">
+      <div class="panel-title">输出位置</div>
+      <div class="output-options">
+        <button id="outDefault" class="out-opt active" data-mode="default">
+          <span class="out-radio"></span>
+          <span class="out-text">
+            <span class="out-name">原文件旁「压缩后」文件夹</span>
+            <span class="out-desc">每个文件旁边自动新建</span>
+          </span>
+        </button>
+        <button id="outCustom" class="out-opt" data-mode="custom">
+          <span class="out-radio"></span>
+          <span class="out-text">
+            <span class="out-name">自定义文件夹</span>
+            <span class="out-desc">全部压缩结果输出到同一位置</span>
+          </span>
+        </button>
+      </div>
+      <div id="customRow" class="custom-row hidden">
+        <span id="customPath" class="custom-path">尚未选择文件夹</span>
+        <button id="chooseFolderBtn" class="folder-btn">选择文件夹…</button>
+      </div>
     </section>
 
     <!-- 压缩级别 -->

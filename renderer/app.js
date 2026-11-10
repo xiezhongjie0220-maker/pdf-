@@ -12,8 +12,17 @@ const statSaved = document.getElementById('statSaved');
 const startBtn = document.getElementById('startBtn');
 const clearBtn = document.getElementById('clearBtn');
 const toastEl = document.getElementById('toast');
+const outputPanel = document.getElementById('outputPanel');
+const outDefaultBtn = document.getElementById('outDefault');
+const outCustomBtn = document.getElementById('outCustom');
+const customRow = document.getElementById('customRow');
+const customPathEl = document.getElementById('customPath');
+const chooseFolderBtn = document.getElementById('chooseFolderBtn');
+const dropTip = document.getElementById('dropTip');
 
 let currentLevel = 'p50';
+let outputMode = localStorage.getItem('outMode') === 'custom' ? 'custom' : 'default';
+let customOutputDir = localStorage.getItem('outDir') || null;
 let items = []; // { id, path, name, dir, size, status, result }
 let uid = 0;
 let isCompressing = false;
@@ -31,6 +40,41 @@ function showToast(msg) {
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toastEl.classList.remove('show'), 2200);
 }
+
+/* ---------- 输出位置 ---------- */
+function setOutputMode(mode) {
+  outputMode = mode;
+  localStorage.setItem('outMode', mode);
+  outDefaultBtn.classList.toggle('active', mode === 'default');
+  outCustomBtn.classList.toggle('active', mode === 'custom');
+  customRow.classList.toggle('hidden', mode !== 'custom');
+  updateDropTip();
+}
+
+function updateDropTip() {
+  if (outputMode === 'custom' && customOutputDir) {
+    dropTip.textContent = `压缩完成后，同名文件将输出到：${customOutputDir}`;
+  } else if (outputMode === 'custom') {
+    dropTip.textContent = '压缩完成后，同名文件将输出到您指定的文件夹（尚未选择）';
+  } else {
+    dropTip.textContent = '压缩完成后，同名文件将输出到原文件所在目录的「压缩后」文件夹';
+  }
+}
+
+async function chooseFolder() {
+  const dir = await api.selectOutputFolder();
+  if (dir) {
+    customOutputDir = dir;
+    localStorage.setItem('outDir', dir);
+    customPathEl.textContent = dir;
+    customPathEl.title = dir;
+    updateDropTip();
+  }
+}
+
+outDefaultBtn.addEventListener('click', () => { if (!isCompressing) setOutputMode('default'); });
+outCustomBtn.addEventListener('click', () => { if (!isCompressing) setOutputMode('custom'); });
+chooseFolderBtn.addEventListener('click', (e) => { e.stopPropagation(); if (!isCompressing) chooseFolder(); });
 
 /* ---------- 添加文件 ---------- */
 async function addFiles(paths) {
@@ -60,10 +104,12 @@ function render() {
   if (items.length > 0) {
     dropZone.classList.add('compact');
     levelPanel.classList.remove('hidden');
+    outputPanel.classList.remove('hidden');
     summaryBar.classList.remove('hidden');
   } else {
     dropZone.classList.remove('compact');
     levelPanel.classList.add('hidden');
+    outputPanel.classList.add('hidden');
     summaryBar.classList.add('hidden');
   }
 
@@ -159,6 +205,11 @@ async function startCompress() {
   if (isCompressing) return;
   const queue = items.filter((i) => i.status === 'pending');
   if (!queue.length) return;
+  if (outputMode === 'custom' && !customOutputDir) {
+    showToast('请先选择输出文件夹');
+    chooseFolder();
+    return;
+  }
   isCompressing = true;
   updateSummary();
 
@@ -166,7 +217,11 @@ async function startCompress() {
     item.status = 'working';
     render();
     try {
-      const result = await api.compressFile({ filePath: item.path, level: currentLevel });
+      const result = await api.compressFile({
+        filePath: item.path,
+        level: currentLevel,
+        outputDir: outputMode === 'custom' ? customOutputDir : null,
+      });
       if (result.ok) {
         if (result.skipped) {
           item.status = 'skipped';
@@ -187,9 +242,21 @@ async function startCompress() {
 
   isCompressing = false;
   const failed = items.filter((i) => i.status === 'error').length;
-  if (failed) showToast(`完成，${failed} 个文件失败`);
-  else showToast('全部压缩完成 ✓ 已输出到各文件旁的「压缩后」文件夹');
+  if (failed) {
+    showToast(`完成，${failed} 个文件失败`);
+  } else if (outputMode === 'custom' && customOutputDir) {
+    showToast(`全部压缩完成 ✓ 已输出到 ${customOutputDir}`);
+  } else {
+    showToast('全部压缩完成 ✓ 已输出到各文件旁的「压缩后」文件夹');
+  }
   updateSummary();
+}
+
+/* ---------- 初始化输出位置状态 ---------- */
+setOutputMode(outputMode);
+if (customOutputDir) {
+  customPathEl.textContent = customOutputDir;
+  customPathEl.title = customOutputDir;
 }
 
 /* ---------- 事件绑定 ---------- */
