@@ -38,19 +38,22 @@
 
 > 最新版本为 **v1.6.0**（压缩前预估体积）。v1.1.0 ~ v1.6.0 各版本的安装包分片与合并脚本均已发布在 [Releases](../../releases) 页面，可按需选择历史版本。
 
-安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [v1.6.0 Release](../../releases/tag/v1.6.0) 页面把 **全部分片** 与 `merge-and-install-1.6.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
+安装包约 96MB，为便于上传被切成 96 个 1MB 分片。在 [v1.6.0 Release](../../releases/tag/v1.6.0) 页面把 **全部分片** 与 `merge-and-install-1.6.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并、校验 SHA256 并启动安装：
 
 ```
-PDF-Compressor-Setup-1.6.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
-merge-and-install-1.6.0.bat                        2.6 KB
+PDF-Compressor-Setup-1.6.0.exe.p001 ~ p096   每个 1 MB（最后一片约 0.6 MB）
+merge-and-install-1.6.0.bat
+download-and-install-1.6.0.bat               可选：一键下载全部分片
 ```
 
-> 💡 **更省事**：也可以只下载 `download-and-install-1.6.0.bat` 一个文件并双击，它会自动下载全部分片、合并、校验 SHA256 并启动安装；已下载的分片会自动跳过，中断后重跑即可续传。
+> 💡 **更省事**：只下载 `download-and-install-1.6.0.bat` 一个文件并双击，它会自动下载全部分片、合并、校验并启动安装；已下载的分片会自动跳过，中断后重跑即可续传。
+
+> 历史版本 v1.1.0 ~ v1.4.0 沿用 24 个 4MB 分片；其中 v1.4.0 的 `part.20` 另附 4 个 1MB 小块，新版合并脚本会自动拼接。
 
 也可手动合并（在该文件夹打开终端执行）：
 
 ```powershell
-Get-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe
+Get-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe.p* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.6.0.exe
 ```
 
 合并后的安装包 SHA256 为 `32542a87d1a429f74ead1783e13a952ee66d59a4c14a445e83e3bda36882aecb`，可用 `certutil -hashfile` 校验。
