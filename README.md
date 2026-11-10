@@ -35,22 +35,17 @@
 
 前往 [Releases](../../releases/latest) 下载最新版安装包。
 
-安装包约 96MB，为便于分发被切成 6 个 16MB 分片。把以下文件下载到**同一文件夹**，然后双击 `merge-and-install-1.4.0.bat` 即可自动合并并启动安装：
+安装包约 96MB，为便于分发被切成 24 个 4MB 分片。在 [Releases](../../releases/latest) 页面把 **全部分片** 与 `merge-and-install-1.4.0.bat` 下载到**同一文件夹**，然后双击该 bat 即可自动合并并启动安装：
 
 ```
-PDF-Compressor-Setup-1.4.0.exe.part.00   16 MB
-PDF-Compressor-Setup-1.4.0.exe.part.01   16 MB
-PDF-Compressor-Setup-1.4.0.exe.part.02   16 MB
-PDF-Compressor-Setup-1.4.0.exe.part.03   16 MB
-PDF-Compressor-Setup-1.4.0.exe.part.04   16 MB
-PDF-Compressor-Setup-1.4.0.exe.part.05   15.6 MB
-merge-and-install-1.4.0.bat              741 B
+PDF-Compressor-Setup-1.4.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.6 MB）
+merge-and-install-1.4.0.bat                        741 B
 ```
 
-也可手动合并（在该文件夹打开命令提示符）：
+也可手动合并（在该文件夹打开终端执行）：
 
-```
-copy /b PDF-Compressor-Setup-1.4.0.exe.part.00+PDF-Compressor-Setup-1.4.0.exe.part.01+PDF-Compressor-Setup-1.4.0.exe.part.02+PDF-Compressor-Setup-1.4.0.exe.part.03+PDF-Compressor-Setup-1.4.0.exe.part.04+PDF-Compressor-Setup-1.4.0.exe.part.05 PDF-Compressor-Setup-1.4.0.exe
+```powershell
+Get-Content -Encoding Byte PDF-Compressor-Setup-1.4.0.exe.part.* | Set-Content -Encoding Byte PDF-Compressor-Setup-1.4.0.exe
 ```
 
 合并后的安装包 SHA256 为 `fa2f8c7d78a264c94f3ffd47250bf15eb63ed3b76c9bba870998bdf2425bcb53`，可用 `certutil -hashfile` 校验。
