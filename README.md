@@ -45,6 +45,8 @@ PDF-Compressor-Setup-1.6.0.exe.part.00 ~ part.23   每个 4 MB（最后一片 3.
 merge-and-install-1.6.0.bat                        2.6 KB
 ```
 
+> 💡 **更省事**：也可以只下载 `download-and-install-1.6.0.bat` 一个文件并双击，它会自动下载全部分片、合并、校验 SHA256 并启动安装；已下载的分片会自动跳过，中断后重跑即可续传。
+
 也可手动合并（在该文件夹打开终端执行）：
 
 ```powershell
